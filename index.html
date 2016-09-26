@@ -48,28 +48,124 @@
             app.initialize();
         </script>
         <script type="text/javascript">		
-function irsend(dev,cmd) {
+var hueUser="3ArcUT9Ngtmf52YC5cyVyDfhUJV-Ku59l3bP1liv";
+var hueIP="192.168.0.40";
+var lightsObj;
+var lights= [];
+var groupsObj;
+var groups= [];
+var timer;
+
+var testURL="192.168.0.33:3004";
+
+function init_page() {
+  refreshStatus();
+}
+
+function refreshStatus(delay) {
+  clearInterval(timer);
+  if (delay) {timer=setInterval(function() {refreshStatus()}, delay);return;}
+  hueCommand('GET','lights','',splitLights);
+  hueCommand('GET','groups','',splitGroups);
+  timer=setInterval(function() {refreshStatus()}, 2000); // time is in milliseconds
+}
+
+function hueCommand(func,cmd,body,callback) {
 
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'http://192.168.0.32:3000/remotes/'+dev+'/'+cmd, true);
+  xhr.open(func, 'http://'+hueIP+'/api/'+hueUser+'/'+cmd, true);
 
   xhr.onload = function() {
-    console.log('irsend:' + dev + '.' + cmd + this.responseText);  
+    //console.log('hue:' + this.responseText);  
+	callback(this.responseText);
 	};
-  xhr.send();
-};
+  xhr.send(body);
+}
+
+function splitLights(jsontext) {
+  lightsObj = JSON.parse(jsontext);
+  keys = "";
+  lix=-1;
+  htm="";
+  for (key in lightsObj) {
+    keys += key + " ";
+	lights[++lix]=key;
+	light=lightsObj[key];
+	stateOn=light["state"]["on"]; // on: true/false
+	reachable=lightsObj[key]["state"]["reachable"]; 
+	name=light["name"];	 // giving name of lamp: Entre/PH4.3/..
+	if (reachable) {
+  	  if (stateOn){
+	    color='#4CAF50;'
+	  } else {
+	    color='#f44336;'
+	  }
+	} else {
+	  color='blue'
+	}
+	htm += ' '+'<input type="button" id="butt'+key+'" value="'+name+'" style="background-color: '+color+'" onClick="Javascript:lightFlip('+key+');"><br>';
+  };
+  document.getElementById('lights').innerHTML=htm;
+}
+
+function splitGroups(jsontext) {
+  groupsObj = JSON.parse(jsontext);
+  keys = "";
+  gix=-1;
+  htm="";
+  for (key in groupsObj) {
+    keys += key + " ";
+	groups[++gix]=key;
+	group=groupsObj[key];
+	stateOn=group["state"]["all_on"]; // on: true/false
+	name=group["name"];	 // giving name of lamp: Entre/PH4.3/..
+	if (stateOn){
+	  color='#4CAF50;'
+	} else {
+	  color='#f44336;'
+	}
+	htm += ' '+'<input type="button" id="butt'+key+'" value="'+name+'" style="background-color: '+color+'" onClick="Javascript:groupFlip('+key+');"><br>';
+  };
+  document.getElementById('groups').innerHTML=htm;
+}
+
+function lightFlip(lightId) {
+  stateOn=lightsObj[lightId]["state"]["on"];
+  reachable=lightsObj[lightId]["state"]["reachable"];
+  console.log('light:'+lightId+','+lightsObj[lightId]+','+stateOn+','+reachable);
+  hueCommand('PUT','lights/'+lightId+'/state','{"on": '+!stateOn+'}',checkResult);
+  refreshStatus(100);
+} 
+
+function groupFlip(groupId) {
+  stateOn=groupsObj[groupId]["state"]["all_on"];
+  console.log('group:'+groupId+','+groupsObj[groupId]+','+stateOn);
+  hueCommand('PUT','groups/'+groupId+'/action','{"on": '+!stateOn+'}',checkResult);
+  refreshStatus(100);
+} 
+
+function checkResult(jsontxt) {
+  console.log('check:'+jsontxt);
+} 
 
 
-function sonossend(dev,cmd) {
+function testCMD(func,cmd,body,callback) {
 
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'http://192.168.0.32:5005/'+dev+'/'+cmd, true);
+  xhr.open(func, 'http://'+testURL, true);
 
   xhr.onload = function() {
-    console.log('sonossend:' + dev + '.' + cmd + this.responseText);  
+    console.log('test:' + this.responseText);  
+	//callback(this.responseText);
+	document.getElementById('test').innerHTML=this.responseText;
 	};
-  xhr.send();
-};
+  xhr.send(body);
+}
+
+// make refresh to refresh both groups/lights
+// make refresh function run via timer 5 sec. ?
+// when moving this to remote, make the same functions for sonos state/ channel (how to guess URL vs radio station ?)
+
         </script>
     </body>
 </html>
