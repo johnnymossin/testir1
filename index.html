@@ -31,16 +31,18 @@
     </head>
     <body>
         <div class="app">
-            <h1>h1 test ir1</h1>
+            <h1>h1 test hue</h1>
 
- <input type="button" id="Bad" value="Bad" onclick="Javascript:sonossend('Bad','playpause')">
- <BR>
- <input type="button" id="Radio" value="Radio" onclick="Javascript:irsend('SonyReceiver','key_power')">
-<BR>
- <input type="button" id="Radio" value="Radio 3" onclick="Javascript:irsend('SonyReceiver','key_3')">
-<BR>
- <input type="button" id="Radio" value="Radio 6" onclick="Javascript:irsend('SonyReceiver','key_6')">
-<BR>
+<div id="lights">Loading...</div>
+<BR><BR>
+<div id="groups"></div>
+<BR><BR>
+
+<div id="test"></div>
+
+
+<div id="trc"></div>
+
          </div>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
@@ -55,8 +57,6 @@ var lights= [];
 var groupsObj;
 var groups= [];
 var timer;
-
-var testURL="192.168.0.33:3004";
 
 function init_page() {
   refreshStatus();
@@ -147,20 +147,6 @@ function groupFlip(groupId) {
 function checkResult(jsontxt) {
   console.log('check:'+jsontxt);
 } 
-
-
-function testCMD(func,cmd,body,callback) {
-
-  var xhr = new XMLHttpRequest();
-  xhr.open(func, 'http://'+testURL, true);
-
-  xhr.onload = function() {
-    console.log('test:' + this.responseText);  
-	//callback(this.responseText);
-	document.getElementById('test').innerHTML=this.responseText;
-	};
-  xhr.send(body);
-}
 
 // make refresh to refresh both groups/lights
 // make refresh function run via timer 5 sec. ?
